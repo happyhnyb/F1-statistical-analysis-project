@@ -6,7 +6,7 @@
 req_pkgs <- c("tidyverse", "broom", "patchwork")
 new_pkgs <- req_pkgs[!(req_pkgs %in% installed.packages()[, "Package"])]
 if (length(new_pkgs)) install.packages(new_pkgs, repos = "https://cloud.r-project.org")
-lapply(req_pkgs, library, character.only = TRUE)
+invisible(lapply(req_pkgs, library, character.only = TRUE))
 
 # ---- 1) Paths & I/O ----
 results_path <- "results.csv"    # update if needed
@@ -15,7 +15,15 @@ if (!dir.exists(out_dir)) dir.create(out_dir)
 
 # ---- 2) Load & Prepare Data ----
 # Expecting columns: grid, points, fastestLapSpeed (mph)
+if (!file.exists(results_path)) {
+  stop(paste("File not found:", results_path, "\nPut results.csv beside this script or update `results_path`."))
+}
 results <- readr::read_csv(results_path, show_col_types = FALSE)
+
+needed_cols <- c("grid", "points", "fastestLapSpeed")
+if (!all(needed_cols %in% names(results))) {
+  stop("Missing required columns. Need: grid, points, fastestLapSpeed")
+}
 
 f1_data <- results %>%
   select(grid, points, fastestLapSpeed) %>%
@@ -35,7 +43,7 @@ f1_data <- results %>%
   )
 
 cat("Rows after cleaning:", nrow(f1_data), "\n")
-print(glimpse(f1_data))
+suppressMessages(print(glimpse(f1_data)))
 
 # ---- 3) Descriptive Stats ----
 summary_stats <- f1_data %>%
@@ -86,8 +94,7 @@ ggsave(file.path(out_dir, "box_fastestLapSpeed_by_group.png"), p_box_speed, widt
 ggsave(file.path(out_dir, "scatter_points_vs_grid.png"), p_scatter_grid, width = 7, height = 5, dpi = 300)
 ggsave(file.path(out_dir, "scatter_points_vs_speed.png"), p_scatter_speed, width = 7, height = 5, dpi = 300)
 
-# Optional: show a 2x2 layout if running interactively
-# (commented to keep scripts non-interactive-friendly)
+# Optional: 2x2 layout if running interactively
 # (p_hist_speed | p_box_speed) / (p_scatter_grid | p_scatter_speed)
 
 # ---- 5) T-test (Front vs Back lap speeds) ----
