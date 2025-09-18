@@ -47,3 +47,12 @@ Normal Q-Q Plot
 Discussion and Recommendations
 This study demonstrates that starting near the front of the grid typically leads to better outcomes in Formula 1 races. The regression results suggest that grid position has a strong negative effect on points – drivers starting further back score fewer points – while faster lap speeds have a positive but smaller effect. Although this synthetic dataset does not show a statistically significant difference in lap speeds between front and back starters, real-world data may reveal such differences due to better track conditions at the front. Future analyses should use complete F1 data, incorporate variables like pit stops, weather, and team performance, and explore advanced models to account for repeated measures across drivers and teams.
 
+
+Hypothesis 1 — Effect of Starting Grid Position on Points
+Result (example wording):
+The regression indicates that starting further back significantly reduces points. In the model including lap speed, the grid coefficient was −0.945 (95% CI [−1.044, −0.846], p < 0.001), meaning each row further back on the grid is associated with about 0.95 fewer points, on average, holding fastest lap speed constant. The model explained R² ≈ 0.64 of the variation in points.
+Conclusion: Reject H₀. Grid position has a statistically significant effect on points.
+Hypothesis 2 — Front vs Back Fastest Lap Speeds
+Result (example wording):
+A Welch two-sample t-test comparing Front (grid ≤ 5) vs Back (grid > 15) produced t = −0.52, p = 0.602; the effect size was small (Cohen’s d ≈ 0.05).
+Conclusion: Fail to reject H₀. In this dataset, Front and Back starters did not differ significantly in mean fastest lap speed.
