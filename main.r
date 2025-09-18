@@ -34,7 +34,7 @@ f1_data <- results %>%
   ) %>%
   filter(!is.na(grid), !is.na(points), !is.na(fastestLapSpeed)) %>%
   mutate(
-    grid_group = case_when(
+    grid_group = dplyr::case_when(
       grid <= 5 ~ "Front",
       grid > 15 ~ "Back",
       TRUE ~ "Mid"
@@ -52,12 +52,12 @@ summary_stats <- f1_data %>%
     grid_mean = mean(grid), grid_sd = sd(grid),
     grid_min = min(grid), grid_q1 = quantile(grid, 0.25),
     grid_med = median(grid), grid_q3 = quantile(grid, 0.75), grid_max = max(grid),
-
+    
     speed_mean = mean(fastestLapSpeed), speed_sd = sd(fastestLapSpeed),
     speed_min = min(fastestLapSpeed), speed_q1 = quantile(fastestLapSpeed, 0.25),
     speed_med = median(fastestLapSpeed), speed_q3 = quantile(fastestLapSpeed, 0.75),
     speed_max = max(fastestLapSpeed),
-
+    
     points_mean = mean(points), points_sd = sd(points),
     points_min = min(points), points_q1 = quantile(points, 0.25),
     points_med = median(points), points_q3 = quantile(points, 0.75),
@@ -65,7 +65,7 @@ summary_stats <- f1_data %>%
   )
 
 cat("\nSummary statistics:\n")
-print(round(summary_stats, 3))
+print(dplyr::mutate(summary_stats, dplyr::across(where(is.numeric), ~round(.x, 3))))
 readr::write_csv(summary_stats, file.path(out_dir, "summary_stats.csv"))
 
 # ---- 4) Plots (EDA) ----
@@ -94,9 +94,6 @@ ggsave(file.path(out_dir, "box_fastestLapSpeed_by_group.png"), p_box_speed, widt
 ggsave(file.path(out_dir, "scatter_points_vs_grid.png"), p_scatter_grid, width = 7, height = 5, dpi = 300)
 ggsave(file.path(out_dir, "scatter_points_vs_speed.png"), p_scatter_speed, width = 7, height = 5, dpi = 300)
 
-# Optional: 2x2 layout if running interactively
-# (p_hist_speed | p_box_speed) / (p_scatter_grid | p_scatter_speed)
-
 # ---- 5) T-test (Front vs Back lap speeds) ----
 front_speeds <- f1_data %>% filter(grid_group == "Front") %>% pull(fastestLapSpeed)
 back_speeds  <- f1_data %>% filter(grid_group == "Back")  %>% pull(fastestLapSpeed)
@@ -118,10 +115,15 @@ print(summary(model))
 coefs_tbl <- broom::tidy(model, conf.int = TRUE)
 perf_tbl  <- broom::glance(model)
 
+# ✅ FIX: round only numeric columns
+coefs_tbl_rounded <- coefs_tbl %>% dplyr::mutate(dplyr::across(where(is.numeric), ~round(.x, 4)))
+perf_tbl_rounded  <- perf_tbl  %>% dplyr::mutate(dplyr::across(where(is.numeric), ~round(.x, 4)))
+
 cat("\nCoefficients (with 95% CI):\n")
-print(round(coefs_tbl, 4))
+print(coefs_tbl_rounded)
+
 cat("\nPerformance metrics:\n")
-print(round(perf_tbl, 4))
+print(perf_tbl_rounded)
 
 readr::write_csv(coefs_tbl, file.path(out_dir, "lm_coefficients.csv"))
 readr::write_csv(perf_tbl,  file.path(out_dir, "lm_performance.csv"))
@@ -142,3 +144,9 @@ qqline(resid(model), col = "gray40")
 dev.off()
 
 cat("\nAll done. Outputs saved to 'figs/'\n")
+
+# show in Plots pane
+print(p_hist_speed)
+print(p_box_speed)
+print(p_scatter_grid)
+print(p_scatter_speed)
